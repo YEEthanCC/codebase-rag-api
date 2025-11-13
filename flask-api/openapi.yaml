@@ -1,0 +1,376 @@
+openapi: 3.0.3
+info:
+  title: Swagger Flask API - OpenAPI 3.0
+  description: |-
+    This is a sample Flask based on the OpenAPI 3.0 specification. 
+  version: 1.0.11
+servers:
+  - url: http://127.0.0.1:5000/
+tags:
+  - name: user
+    description: Operations about user
+paths:
+  /user/signup:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: Add new user to the database
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullname:
+                  type: string
+                  example: Stevie Wonder
+                pwd:
+                  type: string
+                  example: 1234
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "New user created!"
+  /user/signin:
+    post:
+      tags:
+        - user
+      summary: Sign user into the system
+      description: ''
+      operationId: signinUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullname:
+                  type: string
+                  example: jason
+                pwd:
+                  type: string
+                  example: 1234
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0MjM2ODcwMywianRpIjoiNDI5YjEyZjEtYzFhMC00MWQ3LWI2M2MtNTI4MWYxMTY1NjA4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjM1YjE3NDgwLTg3NzgtNDlhNS1iN2JlLTY0NzYwZjNkNjI2MiIsIm5iZiI6MTc0MjM2ODcwMywiY3NyZiI6IjRiNjhmYjdlLTE5OTctNDUwMi04MGU5LTBlYmU3YzlmMTUxNCIsImV4cCI6MTc0MjM2OTYwM30.2nm9o1SBHut_TmF60uVVTCjF9WndZTecM8tltS6tkAU"
+        '401':
+          description: Invalid username/password supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Incorrect username or password"
+  /user/:
+    get:
+      tags:
+        - user
+      summary: Get all users 
+      description: Get a list of users
+      operationId: getAllUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 'The page of users that need to be displayed'
+          required: false
+          schema:
+            type: string
+            example: '1'
+        - name: per_page
+          in: query
+          description: 'Number of users per page'
+          required: false
+          schema:
+            type: string
+            example: '5'
+        - name: sort_by
+          in: query
+          description: 'Attribute of users to be sorted by'
+          required: false
+          schema:
+            type: string
+            example: 'created_at'
+        - name: order
+          in: query
+          description: 'asc or desc'
+          required: false
+          schema:
+            type: string
+            example: 'desc'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array 
+                    items: 
+                      type: object
+                      properties:
+                        public_id:
+                          type: string
+                        fullname:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                    example: [
+        {
+            "created_at": "Wed, 19 Mar 2025 15:04:50 GMT",
+            "fullname": "Michael Jackson",
+            "public_id": "ea13738b-79ba-4ef8-bafc-0b3b8536ee9a",
+            "updated_at": "Wed, 19 Mar 2025 15:04:50 GMT"
+        },
+        {
+            "created_at": "Wed, 19 Mar 2025 11:43:39 GMT",
+            "fullname": "Steve Jobs",
+            "public_id": "fe8d529f-aed6-4a13-9744-b4aebf669009",
+            "updated_at": "Wed, 19 Mar 2025 11:43:39 GMT"
+        },
+        {
+            "created_at": "Wed, 19 Mar 2025 11:34:23 GMT",
+            "fullname": "Jeffrey Dahmer",
+            "public_id": "5b1e1583-f302-43f8-ac70-944f848bed96",
+            "updated_at": "Wed, 19 Mar 2025 11:34:23 GMT"
+        },
+        {
+            "created_at": "Wed, 19 Mar 2025 09:36:04 GMT",
+            "fullname": "Tina Evans",
+            "public_id": "18347caa-0327-496c-9063-c0ac0c0f70b6",
+            "updated_at": "Wed, 19 Mar 2025 09:36:04 GMT"
+        },
+        {
+            "created_at": "Wed, 19 Mar 2025 09:35:52 GMT",
+            "fullname": "Sam Carter",
+            "public_id": "35bd2100-2f1a-4881-91e7-6a5458443897",
+            "updated_at": "Wed, 19 Mar 2025 09:35:52 GMT"
+        }
+    ]
+  /user/search:
+    get:
+      tags:
+        - user
+      summary: Get user by user name
+      description: ''
+      operationId: getUserByName
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fullname
+          in: query
+          description: 'The name that needs to be fetched.'
+          required: true
+          schema:
+            type: string
+            example: jason
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array 
+                    items: 
+                      type: object
+                      properties:
+                        public_id:
+                          type: string
+                        fullname:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time        
+                    example: [
+        {
+            "created_at": "Tue, 18 Mar 2025 14:42:08 GMT",
+            "fullname": "jason",
+            "public_id": "35b17480-8778-49a5-b7be-64760f3d6262",
+            "updated_at": "Tue, 18 Mar 2025 14:42:08 GMT"
+        }
+    ]
+  /user/{public_id}:
+    get:
+      tags:
+        - user
+      summary: Get user
+      description: Creates list of users with given input array
+      operationId: getUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: public_id
+          in: path
+          description: 'public id of the user'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    properties:
+                      public_id:
+                        type: string
+                        example: a4bc03af-95a9-4b1a-b292-b900c3c1d710
+                      fullname:
+                        type: string
+                        example: john
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: Tue, 18 Mar 2025 14:49:50 GMT
+                      updated_at:
+                        type: string
+                        format: date-time     
+                        example: Tue, 18 Mar 2025 14:49:50 GMT
+        '404':
+          description: Invalid public_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No user found!
+        '401': 
+          description: Missing token, or token expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meg:
+                    type: string
+                    example: Token has expired
+    put:
+      tags:
+        - user
+      summary: Update user
+      description: Update user info.
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: public_id
+          in: path
+          description: 'public id of the user'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: New user info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullname:
+                  type: string
+                  example: Don Rickles
+                pwd:
+                  type: string
+                  example: 1234
+      responses:
+        '200': 
+          description: Operation was successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: The user has been updated!
+    delete:
+      tags:
+        - user
+      summary: Delete user
+      description: Remove user.
+      operationId: deleteUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: public_id
+          in: path
+          description: 'The name that needs to be fetched. Use user1 for testing. '
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Operation was successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: The user has been deleted!
+        '404':
+          description: Invalid public_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No user found!
+        '401': 
+          description: Missing token, or token expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meg:
+                    type: string
+                    example: Token has expired
+components:
+  securitySchemes:
+    bearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # optional, arbitrary value for documentation purposes

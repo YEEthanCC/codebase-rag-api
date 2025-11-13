@@ -1,0 +1,19 @@
+services:
+  user-auth:
+    build: .
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/code
+    environment:
+      FLASK_DEBUG: 1
+      SECRET_KEY: ${SECRET_KEY}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+    command: python run.py --host 0.0.0.0
+  mypostgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test
