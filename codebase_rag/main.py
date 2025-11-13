@@ -1037,5 +1037,5 @@ def optimize(
         console.print(f"[bold red]Startup Error: {e}[/bold red]")
 
 
-if __name__ == "__main__":
-    app()
+# if __name__ == "__main__":
+#     app()

@@ -93,8 +93,6 @@ def create_rag_orchestrator(tools: list[Tool]) -> Agent:
     try:
         # Get active orchestrator model configuration
         config = settings.active_orchestrator_config
-        print('llm.py, line 97:')
-        print(config)
         # Create provider instance
         provider = get_provider(
             config.provider,

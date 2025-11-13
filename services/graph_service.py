@@ -7,11 +7,6 @@ import typer
 
 console = Console(width=None, force_terminal=True)
 
-clean: bool = typer.Option(
-    False,
-    "--clean",
-    help="Clean the database before updating (use when adding first repo)",
-),
 
 def update_graph(repo_path: str):
     repo_to_update = Path(repo_path)
@@ -22,11 +17,9 @@ def update_graph(repo_path: str):
     with MemgraphIngestor(
         host=settings.MEMGRAPH_HOST,
         port=settings.MEMGRAPH_PORT,
-        batch_size=None,
     ) as ingestor:
-        if clean:
-            console.print("[bold yellow]Cleaning database...[/bold yellow]")
-            ingestor.clean_database()
+        console.print("[bold yellow]Cleaning database...[/bold yellow]")
+        ingestor.clean_database()
         ingestor.ensure_constraints()
 
         # Load parsers and queries

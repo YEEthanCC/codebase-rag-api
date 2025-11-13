@@ -5,9 +5,12 @@ from services.graph_service import update_graph
 router = APIRouter()
 
 @router.post("/graph/create", status_code=status.HTTP_200_OK)
-async def create_graph(repo_path: str):
-    await create_graph(str)
-    return JSONResponse(content={"result": 'graph created'}, status_code=status.HTTP_200_OK)
+def create_graph(repo_path: str):
+    try:
+        create_graph(str)
+        return JSONResponse(content={"result": 'graph created'}, status_code=status.HTTP_200_OK)
+    except Exception as e:
+        return JSONResponse(content={"result": 'graph create failed'}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @router.patch("/graph/update", status_code=status.HTTP_200_OK)
 def update_graph(repo_path: str):
