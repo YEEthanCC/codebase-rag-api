@@ -18,3 +18,7 @@ async def query(question: str, repo_path: str):
         rag_agent = _initialize_services_and_agent(repo_path, ingestor)
         response = await rag_agent.run(question + get_session_context(), message_history=[])
         return response.output
+
+
+# async def optimize(repo_path: str):
+#     target

@@ -29,3 +29,12 @@ def update_graph(repo_path: str):
         updater.run()
     console.print("[bold green]Graph update completed![/bold green]")
     return
+
+def clean():
+    with MemgraphIngestor(
+        host=settings.MEMGRAPH_HOST,
+        port=settings.MEMGRAPH_PORT,
+    ) as ingestor:
+        console.print("[bold yellow]Cleaning database...[/bold yellow]")
+        ingestor.clean_database()
+    return
