@@ -7,7 +7,7 @@ from rich.markdown import Markdown
 
 console = Console(width=None, force_terminal=True)
 
-def query(question: str, repo_path: str):
+async def query(question: str, repo_path: str):
     init_session_log(_setup_common_initialization(repo_path))
     log_session_event(f"USER: {question}")
     with MemgraphIngestor(
@@ -16,7 +16,7 @@ def query(question: str, repo_path: str):
     ) as ingestor:
         console.print("[bold green]Successfully connected to Memgraph.[/bold green]")
         rag_agent = _initialize_services_and_agent(repo_path, ingestor)
-        response = rag_agent.run(question + get_session_context(), message_history=[])
+        response = await rag_agent.run(question + get_session_context(), message_history=[])
         return response.output
 
 
