@@ -4,10 +4,11 @@ from codebase_rag.config import settings
 from rich.console import Console
 from rich.panel import Panel
 from rich.markdown import Markdown
+from typing import Any
 
 console = Console(width=None, force_terminal=True)
 
-async def query(question: str, repo_path: str):
+async def query(question: str, repo_path: str, history: list[Any]):
     init_session_log(_setup_common_initialization(repo_path))
     log_session_event(f"USER: {question}")
     with MemgraphIngestor(
@@ -16,8 +17,9 @@ async def query(question: str, repo_path: str):
     ) as ingestor:
         console.print("[bold green]Successfully connected to Memgraph.[/bold green]")
         rag_agent = _initialize_services_and_agent(repo_path, ingestor)
-        response = await rag_agent.run(question + get_session_context(), message_history=[])
-        return response.output
+        response = await rag_agent.run(question + get_session_context(), history)
+        history.extend(response.new_messages())
+        return response.output, history
 
 
 async def optimize(repo_path: str, language: str, ref: str):
