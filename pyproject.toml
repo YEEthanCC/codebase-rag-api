@@ -21,6 +21,7 @@ dependencies = [
     "click>=8.0.0",
     "pytest-xdist>=3.8.0",
     "fastapi[standard]>=0.121.1",
+    "redis>=7.1.0",
 ]
 
 [tool.setuptools]
