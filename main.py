@@ -2,9 +2,7 @@ from fastapi import FastAPI
 from controllers.graph_controller import router as graph_router
 from controllers.repo_controller import router as repo_router
 from fastapi.middleware.cors import CORSMiddleware
-import redis
 
-r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 app = FastAPI()
 
 @app.get("/")
