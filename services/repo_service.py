@@ -5,10 +5,11 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.markdown import Markdown
 from typing import Any
+from db.session import get_session, set_session
 
 console = Console(width=None, force_terminal=True)
 
-async def query(question: str, repo_path: str, history: list[Any]):
+async def query(question: str, repo_path: str, session_id: str):
     init_session_log(_setup_common_initialization(repo_path))
     log_session_event(f"USER: {question}")
     with MemgraphIngestor(
@@ -16,10 +17,13 @@ async def query(question: str, repo_path: str, history: list[Any]):
         port=settings.MEMGRAPH_PORT,
     ) as ingestor:
         console.print("[bold green]Successfully connected to Memgraph.[/bold green]")
+        history = get_session(session_id)
         rag_agent = _initialize_services_and_agent(repo_path, ingestor)
-        response = await rag_agent.run(question + get_session_context(), history)
+        question_with_context = question + get_session_context()
+        response = await rag_agent.run(question_with_context, message_history=history)
         history.extend(response.new_messages())
-        return response.output, history
+        set_session(session_id, history)
+        return response.output
 
 
 async def optimize(repo_path: str, language: str, ref: str):

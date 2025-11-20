@@ -7,9 +7,9 @@ from typing import Any
 router = APIRouter()
 
 @router.get("/repo/query", status_code=status.HTTP_200_OK)
-async def query_repo(question: str, repo_path: str, history: list[Any]):
-    response, history = await query(question, repo_path, history)
-    return JSONResponse(content={"response": response, "history": history}, status_code=status.HTTP_200_OK)
+async def query_repo(question: str, repo_path: str, session_id: str):
+    response = await query(question, repo_path, session_id)
+    return JSONResponse(content={"response": response}, status_code=status.HTTP_200_OK)
 
 @router.post("/repo/optimize", status_code=status.HTTP_200_OK)
 async def optimize_repo(repo_path: str, language: Optional[str] = None, ref: Optional[str] = None):
