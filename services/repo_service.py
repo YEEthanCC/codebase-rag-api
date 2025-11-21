@@ -1,4 +1,4 @@
-from codebase_rag.main import run_with_cancellation, _initialize_services_and_agent, _setup_common_initialization, init_session_log, log_session_event, get_session_context, is_edit_operation_response
+from codebase_rag.main import run_with_cancellation, _initialize_services_and_agent, _setup_common_initialization, init_session_log, log_session_event, get_session_context, is_edit_operation_response, _handle_rejection
 from codebase_rag.graph_updater import MemgraphIngestor
 from codebase_rag.config import settings
 from rich.console import Console
@@ -25,6 +25,19 @@ async def query(question: str, repo_path: str, session_id: str):
         history.extend(response.new_messages())
         set_session(session_id, history)
         return response.output
+
+
+async def discard_changes(repo_path: str, session_id: str):
+    init_session_log(_setup_common_initialization(repo_path))
+    with MemgraphIngestor(
+        host=settings.MEMGRAPH_HOST,
+        port=settings.MEMGRAPH_PORT,
+    ) as ingestor:
+        console.print("[bold green]Successfully connected to Memgraph.[/bold green]")
+
+        rag_agent = _initialize_services_and_agent(repo_path, ingestor)
+        history = get_session(session_id)
+        await _handle_rejection(rag_agent, history, console)
 
 
 async def optimize(repo_path: str, language: str, ref: str, question: str, session_id: str):
@@ -82,7 +95,6 @@ Remember: Propose changes first, wait for my approval, then implement.
         )
     history.extend(response.new_messages())
     set_session(session_id, history)
-    return response.output
+    return response.output, is_edit_operation_response(response.output)
 
-async def change_code(response: str):
-    is_edit_operation_response(response)
+    
