@@ -1,14 +1,13 @@
-from codebase_rag.main import run_with_cancellation, _initialize_services_and_agent, _setup_common_initialization, init_session_log, log_session_event, get_session_context
+from codebase_rag.main import run_with_cancellation, _initialize_services_and_agent, _setup_common_initialization, init_session_log, log_session_event, get_session_context, is_edit_operation_response
 from codebase_rag.graph_updater import MemgraphIngestor
 from codebase_rag.config import settings
 from rich.console import Console
-from rich.panel import Panel
-from rich.markdown import Markdown
+from rich.prompt import Confirm
 from typing import Any
 from db.session import get_session, set_session
 
 console = Console(width=None, force_terminal=True)
-
+confirm_edits_globally = True
 
 
 async def query(question: str, repo_path: str, session_id: str):
@@ -84,3 +83,6 @@ Remember: Propose changes first, wait for my approval, then implement.
     history.extend(response.new_messages())
     set_session(session_id, history)
     return response.output
+
+async def change_code(response: str):
+    is_edit_operation_response(response)
