@@ -9,6 +9,8 @@ from db.session import get_session, set_session
 
 console = Console(width=None, force_terminal=True)
 
+
+
 async def query(question: str, repo_path: str, session_id: str):
     init_session_log(_setup_common_initialization(repo_path))
     log_session_event(f"USER: {question}")
@@ -26,7 +28,7 @@ async def query(question: str, repo_path: str, session_id: str):
         return response.output
 
 
-async def optimize(repo_path: str, language: str, ref: str):
+async def optimize(repo_path: str, language: str, ref: str, question: str, session_id: str):
     init_session_log(_setup_common_initialization(repo_path))
     with MemgraphIngestor(
         host=settings.MEMGRAPH_HOST,
@@ -35,26 +37,6 @@ async def optimize(repo_path: str, language: str, ref: str):
         console.print("[bold green]Successfully connected to Memgraph.[/bold green]")
 
         rag_agent = _initialize_services_and_agent(repo_path, ingestor)
-    console.print(
-        f"[bold green]Starting {language} optimization session...[/bold green]"
-    )
-    console.print(
-        f"[bold green]Starting {language} optimization session...[/bold green]"
-    )
-    document_info = (
-        f" using the reference document: {ref}"
-        if ref
-        else ""
-    )
-    console.print(
-        Panel(
-            f"[bold yellow]The agent will analyze your codebase{document_info} and propose specific optimizations."
-            f" You'll be asked to approve each suggestion before implementation."
-            f" Type 'exit' or 'quit' to end the session.[/bold yellow]",
-            border_style="yellow",
-        )
-    )
-
     # Initial optimization analysis
     instructions = [
         "Use your code retrieval and graph querying tools to understand the codebase structure",
@@ -88,14 +70,17 @@ Remember: Propose changes first, wait for my approval, then implement.
     with console.status(
         "[bold green]Agent is analyzing codebase... (Press Ctrl+C to cancel)[/bold green]"
     ):
+        history = get_session(session_id)
+        if len(history) == 0: 
+            question_with_context = initial_question + get_session_context()
+        else: 
+            question_with_context = question
         response = await run_with_cancellation(
             console,
             rag_agent.run(
-                initial_question + get_session_context(), message_history=[]
+                question_with_context, message_history=history
             ),
         )
-
-        if isinstance(response, dict) and response.get("cancelled"):
-            log_session_event("ASSISTANT: [Analysis was cancelled]")
-            session_cancelled = True
+    history.extend(response.new_messages())
+    set_session(session_id, history)
     return response.output
