@@ -1,5 +1,5 @@
 run:
-	uvicorn main:app --reload --host 0.0.0.0 --port 8000
+	uv run main.py
 	
 .PHONY: help all install dev test clean python
 

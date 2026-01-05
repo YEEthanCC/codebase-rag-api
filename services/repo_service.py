@@ -21,6 +21,7 @@ async def query(question: str, repo_path: str, session_id: str):
         history = get_session(session_id)
         rag_agent = _initialize_services_and_agent(repo_path, ingestor)
         question_with_context = question + get_session_context()
+        print(f'question with context: {question_with_context}')
         response = await rag_agent.run(question_with_context, message_history=history)
         history.extend(response.new_messages())
         set_session(session_id, history)
