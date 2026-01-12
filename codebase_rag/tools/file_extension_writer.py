@@ -17,7 +17,7 @@ class FileCreationResult(BaseModel):
 class FileWriter:
     """Service to write file content to the filesystem."""
 
-    def __init__(self, socket_id: str = "."):
+    def __init__(self, socket_id: str):
         self.socket_id = socket_id
 
     async def create_file(self, file_path: str, content: str) -> FileCreationResult:

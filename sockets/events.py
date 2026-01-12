@@ -1,4 +1,6 @@
 from .server import sio
+from codebase_rag.tools.file_reader import FileReader
+from codebase_rag.tools.file_extension_reader import FileExtensionReader
 
 @sio.on("connect")
 async def connect(sid, environ):
