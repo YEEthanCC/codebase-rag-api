@@ -5,21 +5,23 @@ from typing import Optional
 from typing import Any
 from codebase_rag.tools.file_reader import FileReader
 from codebase_rag.tools.file_extension_reader import FileExtensionReader
+from codebase_rag.tools.directory_extension_lister import DirectoryExtensionLister
+from codebase_rag.tools.directory_lister import DirectoryLister
 
 router = APIRouter()
 
 @router.get("/repo/extension/query", status_code=status.HTTP_200_OK)
 async def query_repo(sid: str, question: str):
-    file_reader = FileReader('/home/ethan/projects/flask-api')
-    file_extension_reader = FileExtensionReader(sid)
-    local_content = f"{await file_reader.read_file('app/controllers/sfasdfs')}"
+    directory_lister = DirectoryLister('/home/ethan/projects/flask-api')
+    direcotry_extension_lister = DirectoryExtensionLister(sid)
+    local_content = f"{directory_lister.list_directory_contents('app/controller')}"
     print(f"file reader output: \n{local_content}")
-    extension_content = f"{await file_extension_reader.read_file('app/controllers/sdfsfeer')}"
-    print(f"file extension reader output: \n{extension_content}")
+    extension_content = f"{await direcotry_extension_lister.list_directory_contents('app/controller')}"
+    print(f"\nfile extension reader output: \n{extension_content}")
     if local_content == extension_content:
-        print("pass")
+        print("\npass")
     else:
-        print("failed")
+        print("\nfailed")
     return JSONResponse(content={"response": "get message from client"}, status_code=status.HTTP_200_OK)
 
 @router.post("/repo/extension/optimize", status_code=status.HTTP_200_OK)
