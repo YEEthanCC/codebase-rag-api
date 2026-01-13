@@ -12,9 +12,14 @@ router = APIRouter()
 async def query_repo(sid: str, question: str):
     file_reader = FileReader('/home/ethan/projects/flask-api')
     file_extension_reader = FileExtensionReader(sid)
-    print(f"file reader output: \n{await file_reader.read_file('docker-compose.yml')}")
-    content = await file_extension_reader.read_file('docker-compose.yml')
-    print(f"file extension reader output: \n{content}")
+    local_content = f"{await file_reader.read_file('app/controllers/sfasdfs')}"
+    print(f"file reader output: \n{local_content}")
+    extension_content = f"{await file_extension_reader.read_file('app/controllers/sdfsfeer')}"
+    print(f"file extension reader output: \n{extension_content}")
+    if local_content == extension_content:
+        print("pass")
+    else:
+        print("failed")
     return JSONResponse(content={"response": "get message from client"}, status_code=status.HTTP_200_OK)
 
 @router.post("/repo/extension/optimize", status_code=status.HTTP_200_OK)

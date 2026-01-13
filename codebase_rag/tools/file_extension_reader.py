@@ -2,6 +2,7 @@ from loguru import logger
 from pydantic_ai import Tool
 from .file_reader import FileReadResult
 from sockets.server import sio
+from pathlib import Path
 
 
 class FileExtensionReader:
@@ -22,15 +23,26 @@ class FileExtensionReader:
         self.socket_id = socket_id
 
     async def read_file(self, file_path: str) -> FileReadResult:
-        result = await sio.call(
-            "read_file",
-            {"file_path": file_path},
-            to=self.socket_id,
-        )
+        if Path(file_path).suffix.lower() in self.binary_extensions:
+            error_msg = f"File '{file_path}' is a binary file. Use the 'analyze_document' tool for this file type."
+            logger.warning(f"[FileReader] {error_msg}")
+            return FileReadResult(file_path=file_path, error_message=error_msg)
+        try: 
+            result = await sio.call(
+                "read_file",
+                {"file_path": file_path},
+                to=self.socket_id,
+            )
+        except Exception as e:
+            return FileReadResult(
+                file_path=file_path, error_message=f"An unexpected error occurred: {e}"
+            )
 
         if not result["ok"]:
-            raise RuntimeError(result["error"])
-
+            return FileReadResult(
+                file_path=file_path, error_message=result["error"]
+            )
+        
         return FileReadResult(
             file_path=file_path,
             content=result["content"]
