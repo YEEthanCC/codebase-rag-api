@@ -81,7 +81,7 @@ class FileEditor:
             logger.warning(f"No parser available for {file_path}")
             return None
 
-        content = sio.call('read_file', {'file_path': file_path}, to=self.socket_id)
+        content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
 
         tree = parser.parse(content)
         return tree.root_node
@@ -216,7 +216,7 @@ class FileEditor:
             logger.error(f"Function '{function_name}' not found in {file_path}.")
             return False
 
-        original_content = sio.call('read_file', {'file_path': file_path}, to=self.socket_id)
+        original_content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
 
         # Create patches using diff-match-patch
         patches = self.dmp.patch_make(original_code, new_code)
@@ -271,7 +271,7 @@ class FileEditor:
     def apply_patch_to_file(self, file_path: str, patch_text: str) -> bool:
         """Apply a patch to a file using diff-match-patch."""
         try:
-            original_content = sio.call('read_file', {'file_path': file_path}, to=self.socket_id)
+            original_content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
             # Parse the patch
             patches = self.dmp.patch_fromText(patch_text)
 
@@ -354,7 +354,7 @@ class FileEditor:
             f"[FileEditor] Attempting surgical block replacement in: {file_path}"
         )
         try:
-            original_content = sio.call('read_file', {'file_path': file_path}, to=self.socket_id)
+            original_content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
 
             # Find the target block in the file
             if target_block not in original_content:
@@ -411,7 +411,7 @@ class FileEditor:
         """Overwrites entire file with new content - use for full file replacement."""
         logger.info(f"[FileEditor] Attempting full file replacement: {file_path}")
         try:
-            original_content = sio.call('read_file', {'file_path': file_path}, to=self.socket_id)
+            original_content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
 
             # Display colored diff
             if original_content != new_content:

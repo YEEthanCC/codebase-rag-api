@@ -29,7 +29,7 @@ class FileExtensionReader:
             return FileReadResult(file_path=file_path, error_message=error_msg)
         try: 
             result = await sio.call(
-                "read_file",
+                "file:read",
                 {"file_path": file_path},
                 to=self.socket_id,
             )

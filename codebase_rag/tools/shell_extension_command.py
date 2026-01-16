@@ -163,7 +163,7 @@ class ShellCommander:
         }
         try:
             result: dict[str, Any] = await asyncio.wait_for(
-                self.sio.call("run_shell_command", data=payload, to=self.socket_id),
+                self.sio.call("command:run", data=payload, to=self.socket_id),
                 timeout=self.timeout + 5,  # small buffer
             )
 

@@ -7,17 +7,19 @@ from codebase_rag.tools.file_reader import FileReader
 from codebase_rag.tools.file_extension_reader import FileExtensionReader
 from codebase_rag.tools.directory_extension_lister import DirectoryExtensionLister
 from codebase_rag.tools.directory_lister import DirectoryLister
+from codebase_rag.tools.document_analyzer import DocumentAnalyzer
+from codebase_rag.tools.document_extension_analyzer import DocumentExtensionAnalyzer
 
 router = APIRouter()
 
 @router.get("/repo/extension/query", status_code=status.HTTP_200_OK)
 async def query_repo(sid: str, question: str):
-    directory_lister = DirectoryLister('/home/ethan/projects/flask-api')
-    direcotry_extension_lister = DirectoryExtensionLister(sid)
-    local_content = f"{directory_lister.list_directory_contents('app/controller')}"
-    print(f"file reader output: \n{local_content}")
-    extension_content = f"{await direcotry_extension_lister.list_directory_contents('app/controller')}"
-    print(f"\nfile extension reader output: \n{extension_content}")
+    document_analyzer = DocumentAnalyzer('/home/ethan/projects/flask-api')
+    document_extension_analyzer = DocumentExtensionAnalyzer(sid)
+    local_content = f"{document_analyzer.analyze(file_path='Q1 Learning Plan.pdf', question='What the file is about?')}"
+    print(f"Local output: \n{local_content}")
+    extension_content = f"{await document_extension_analyzer.analyze(file_path='Q1 Learning Plan.pdf', question='What the file is about?')}"
+    print(f"\nExtension output: \n{extension_content}")
     if local_content == extension_content:
         print("\npass")
     else:

@@ -22,14 +22,14 @@ class _NotSupportedClient:
         )
 
 
-class DocumentAnalyzer:
+class DocumentExtensionAnalyzer:
     """
     A tool to perform multimodal analysis on documents like PDFs
     by making a direct call to the Gemini API.
     """
 
-    def __init__(self, project_root: str, socket_id: str) -> None:
-        self.project_root = Path(project_root).resolve()
+    def __init__(self, socket_id: str) -> None:
+        self.project_root = '.'
         self.socket_id = socket_id
         # Initialize client based on the orchestrator model's provider
         # Note: Document analysis uses the orchestrator model since it's the main reasoning model
@@ -53,7 +53,7 @@ class DocumentAnalyzer:
 
         logger.info(f"DocumentAnalyzer initialized with root: {self.project_root}")
 
-    def analyze(self, file_path: str, question: str) -> str:
+    async def analyze(self, file_path: str, question: str) -> str:
         """
         Reads a document (e.g., PDF), sends it to the Gemini multimodal endpoint
         with a specific question, and returns the model's analysis.
@@ -70,8 +70,15 @@ class DocumentAnalyzer:
                 )
 
             # Prepare the multimodal prompt
-            file_bytes = sio.call('read_bytes', {'file_path': file_path}, to=self.socket_id)
-
+            try:
+                res = await sio.call('bytes:read', {'file_path': file_path}, to=self.socket_id)
+            except Exception as e:
+                return f"An unexpected error occurred: {e}"
+            
+            if not res["ok"]:
+                return f"Error: File not found at '{file_path}'."
+            
+            file_bytes = res["content"]
             # Use the simpler format that the library expects
             prompt_parts = [
                 types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
@@ -81,7 +88,7 @@ class DocumentAnalyzer:
             # Call the model and get the response
             # Use the orchestrator model ID since document analysis uses the orchestrator config
             orchestrator_config = settings.active_orchestrator_config
-            response = self.client.models.generate_content(
+            response = await self.client.models.generate_content(
                 model=orchestrator_config.model_id, contents=prompt_parts
             )
 
@@ -125,7 +132,7 @@ class DocumentAnalyzer:
             return f"An error occurred during analysis: {e}"
 
 
-def create_document_analyzer_tool(analyzer: DocumentAnalyzer) -> Tool:
+def create_document_analyzer_tool(analyzer: DocumentExtensionAnalyzer) -> Tool:
     """Factory function to create the document analyzer tool."""
 
     def analyze_document(file_path: str, question: str) -> str:

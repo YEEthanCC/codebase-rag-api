@@ -16,7 +16,7 @@ class DirectoryExtensionLister:
         """
 
         try:
-            res = await sio.call('list_dir', {'dir_path': directory_path}, to=self.socket_id)
+            res = await sio.call('dir:list', {'dir_path': directory_path}, to=self.socket_id)
             
             if not res["ok"]:
                 return res["error"]

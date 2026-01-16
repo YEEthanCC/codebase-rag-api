@@ -60,7 +60,7 @@ class CodeRetriever:
             # full_path = self.project_root / file_path_str
             # with full_path.open("r", encoding="utf-8") as f:
             #     all_lines = f.readlines()
-            all_lines = await sio.call('read_file', {'file_path': file_path_str}, to=self.socket_id)
+            all_lines = await sio.call('file:read', {'file_path': file_path_str}, to=self.socket_id)
 
             snippet_lines = all_lines[start_line - 1 : end_line]
             source_code = "".join(snippet_lines)
