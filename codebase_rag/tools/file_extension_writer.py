@@ -24,6 +24,18 @@ class FileExtensionWriter:
         """Creates or overwrites a file with the given content."""
         logger.info(f"[FileWriter] Creating file: {file_path}")
         try:
+            res = await sio.call(
+                "file:write", 
+                {"file_path": file_path, "content": content},
+                to=self.socket_id,
+            )
+            if not res["ok"]:
+                err_msg = f"Error creating file {file_path}: {res["error"]}"
+                logger.error(err_msg)
+                return FileCreationResult(
+                    file_path=file_path, success=False, error_message=err_msg
+                )
+                
             logger.info(
                 f"[FileWriter] Successfully wrote {len(content)} characters to {file_path}"
             )

@@ -9,21 +9,27 @@ from codebase_rag.tools.directory_extension_lister import DirectoryExtensionList
 from codebase_rag.tools.directory_lister import DirectoryLister
 from codebase_rag.tools.document_analyzer import DocumentAnalyzer
 from codebase_rag.tools.document_extension_analyzer import DocumentExtensionAnalyzer
+from codebase_rag.tools.file_writer import FileWriter
+from codebase_rag.tools.file_extension_writer import FileExtensionWriter
 
 router = APIRouter()
 
 @router.get("/repo/extension/query", status_code=status.HTTP_200_OK)
 async def query_repo(sid: str, question: str):
-    document_analyzer = DocumentAnalyzer('/home/ethan/projects/flask-api')
-    document_extension_analyzer = DocumentExtensionAnalyzer(sid)
-    local_content = f"{document_analyzer.analyze(file_path='Q1 Learning Plan.pdf', question='What the file is about?')}"
-    print(f"Local output: \n{local_content}")
-    extension_content = f"{await document_extension_analyzer.analyze(file_path='Q1 Learning Plan.pdf', question='What the file is about?')}"
-    print(f"\nExtension output: \n{extension_content}")
-    if local_content == extension_content:
-        print("\npass")
-    else:
-        print("\nfailed")
+    file_writer = FileWriter('/home/ethan/projects/flask-api')
+    file_extension_writer = FileExtensionWriter(sid)
+    with open('uv.lock', 'r') as file:
+        content = file.read()
+        res = await file_extension_writer.create_file('app/controllers/test/uv.lock', content)
+        print(res)
+    # local_content = f"{document_analyzer.analyze(file_path='Q1 Learning Plan.pdf', question='What the file is about?')}"
+    # print(f"Local output: \n{local_content}")
+    # extension_content = f"{await document_extension_analyzer.analyze(file_path='Q1 Learning Plan.pdf', question='What the file is about?')}"
+    # print(f"\nExtension output: \n{extension_content}")
+    # if local_content == extension_content:
+    #     print("\npass")
+    # else:
+    #     print("\nfailed")
     return JSONResponse(content={"response": "get message from client"}, status_code=status.HTTP_200_OK)
 
 @router.post("/repo/extension/optimize", status_code=status.HTTP_200_OK)
