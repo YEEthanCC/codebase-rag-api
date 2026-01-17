@@ -48,7 +48,7 @@ class EditResult(BaseModel):
     error_message: str | None = None
 
 
-class FileEditor:
+class FileExtensionEditor:
     def __init__(self, socket_id: str) -> None:
         self.socket_id = socket_id
         self.dmp = diff_match_patch.diff_match_patch()
@@ -80,9 +80,13 @@ class FileEditor:
         if not parser:
             logger.warning(f"No parser available for {file_path}")
             return None
-
-        content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
-
+        try: 
+            res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+        except Exception as e:
+            return None
+        if not res["ok"]:
+            return None
+        content = res["content"]
         tree = parser.parse(content)
         return tree.root_node
 
@@ -215,8 +219,14 @@ class FileEditor:
         if not original_code:
             logger.error(f"Function '{function_name}' not found in {file_path}.")
             return False
-
-        original_content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+        
+        try: 
+            res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+        except Exception as e:
+            return False
+        if not res["ok"]:
+            return False
+        original_content = res["content"]
 
         # Create patches using diff-match-patch
         patches = self.dmp.patch_make(original_code, new_code)
@@ -271,7 +281,13 @@ class FileEditor:
     def apply_patch_to_file(self, file_path: str, patch_text: str) -> bool:
         """Apply a patch to a file using diff-match-patch."""
         try:
-            original_content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            try: 
+                res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            except Exception as e:
+                return None
+            if not res["ok"]:
+                return False
+            original_content = res["content"]
             # Parse the patch
             patches = self.dmp.patch_fromText(patch_text)
 
@@ -284,10 +300,19 @@ class FileEditor:
                 return False
 
             # Write the updated content
-            sio.emit('write_file', {'file_path': file_path, 'content': new_content})
-
+            res = sio.call(
+                "file:write", 
+                {"file_path": file_path, "content": new_content},
+                to=self.socket_id,
+            )
+            if not res["ok"]:
+                err_msg = f"Error creating file {file_path}: {res["error"]}"
+                logger.error(err_msg)
+                return False
+                
             logger.success(f"Successfully applied patch to {file_path}")
             return True
+            
 
         except Exception as e:
             logger.error(f"Error applying patch to {file_path}: {e}")
@@ -391,8 +416,17 @@ class FileEditor:
                 return False
 
             # Write the surgically modified content
-            sio.emit('write_file', {'file_path': file_path, 'content': patched_content})
-
+            res = sio.call(
+                "file:write", 
+                {"file_path": file_path, "content": patched_content},
+                to=self.socket_id,
+            )
+            if not res["ok"]:
+                err_msg = f"Error creating file {file_path}: {res["error"]}"
+                logger.error(err_msg)
+                return False
+                
+            logger.success(f"Successfully applied patch to {file_path}")
             logger.success(
                 f"[FileEditor] Successfully applied surgical block replacement in: {file_path}"
             )
@@ -411,15 +445,27 @@ class FileEditor:
         """Overwrites entire file with new content - use for full file replacement."""
         logger.info(f"[FileEditor] Attempting full file replacement: {file_path}")
         try:
-            original_content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
-
+            # Read original content to show diff
+            res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            if not res["ok"]:
+                return False
+            original_content = res["content"]
             # Display colored diff
             if original_content != new_content:
                 self._display_colored_diff(original_content, new_content, file_path)
 
             # Write new content (full replacement)
-            sio.emit('write_file', {'file_path': file_path, 'content': new_content})
-
+            res = sio.call(
+                "file:write", 
+                {"file_path": file_path, "content": new_content},
+                to=self.socket_id,
+            )
+            if not res["ok"]:
+                err_msg = f"Error creating file {file_path}: {res["error"]}"
+                logger.error(err_msg)
+                return EditResult(
+                    file_path=file_path, success=False, error_message=error_msg
+                )
             logger.success(
                 f"[FileEditor] Successfully replaced entire file: {file_path}"
             )
@@ -439,7 +485,7 @@ class FileEditor:
             )
 
 
-def create_file_editor_tool(file_editor: FileEditor) -> Tool:
+def create_file_editor_tool(file_editor: FileExtensionEditor) -> Tool:
     """Factory function to create the file editor tool."""
 
     async def replace_code_surgically(
