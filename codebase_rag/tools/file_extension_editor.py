@@ -379,7 +379,10 @@ class FileExtensionEditor:
             f"[FileEditor] Attempting surgical block replacement in: {file_path}"
         )
         try:
-            original_content = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            if not res["ok"]:
+                return False
+            original_content = res["content"]
 
             # Find the target block in the file
             if target_block not in original_content:
