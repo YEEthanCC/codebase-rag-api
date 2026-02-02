@@ -10,7 +10,7 @@ from tree_sitter import Node, Parser
 
 from ..language_config import get_language_config
 from ..parser_loader import load_parsers
-from sockets import sio
+from sockets.server import sio
 
 
 class FunctionMatch(TypedDict):
@@ -54,7 +54,6 @@ class FileExtensionEditor:
         self.dmp = diff_match_patch.diff_match_patch()
         # Load parsers using the shared parser loader
         self.parsers, _ = load_parsers()
-        logger.info(f"FileEditor initialized with root: {self.project_root}")
 
     def _get_real_extension(self, file_path_obj: Path) -> str:
         """Gets the file extension, looking past a .tmp suffix if present."""

@@ -104,11 +104,11 @@ def timing_decorator(
     return wrapper
 
 
-class ShellCommander:
+class ShellExtensionCommander:
     """Service to execute shell commands."""
 
-    def __init__(self, project_root: str, socket_id: str, timeout: int = 30):
-        self.project_root = project_root
+    def __init__(self, socket_id: str, timeout: int = 30):
+        self.project_root = '.'
         self.timeout = timeout
         self.socket_id = socket_id
         logger.info(f"ShellCommander initialized with root: {self.project_root}")
@@ -163,7 +163,7 @@ class ShellCommander:
         }
         try:
             result: dict[str, Any] = await asyncio.wait_for(
-                self.sio.call("command:run", data=payload, to=self.socket_id),
+                self.sio.call("command:run", payload, to=self.socket_id),
                 timeout=self.timeout + 5,  # small buffer
             )
 
@@ -190,7 +190,7 @@ class ShellCommander:
             )
 
 
-def create_shell_command_tool(shell_commander: ShellCommander) -> Tool:
+def create_shell_command_tool(shell_commander: ShellExtensionCommander) -> Tool:
     """Factory function to create the shell command tool."""
 
     async def run_shell_command(

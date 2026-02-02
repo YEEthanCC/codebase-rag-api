@@ -8,7 +8,6 @@ import socketio
 import uvicorn
 
 from sockets.server import sio
-from sockets import events
 
 app = FastAPI()
 
