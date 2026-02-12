@@ -14,7 +14,7 @@ class FileCreationResult(BaseModel):
     error_message: str | None = None
 
 
-class FileExtensionWriter:
+class RemoteFileWriter:
     """Service to write file content to the filesystem."""
 
     def __init__(self, socket_id: str):
@@ -54,7 +54,7 @@ class FileExtensionWriter:
             )
 
 
-def create_file_writer_tool(file_writer: FileExtensionWriter) -> Tool:
+def create_file_writer_tool(file_writer: RemoteFileWriter) -> Tool:
     """Factory function to create the file writer tool."""
 
     async def create_new_file(file_path: str, content: str) -> FileCreationResult:

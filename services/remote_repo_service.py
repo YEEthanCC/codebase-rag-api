@@ -7,12 +7,12 @@ from db.session import get_session, set_session
 from codebase_rag.tools.codebase_query import create_query_tool
 from codebase_rag.services.llm import CypherGenerator, create_rag_orchestrator
 from codebase_rag.tools.code_retrieval import CodeRetriever, create_code_retrieval_tool
-from codebase_rag.tools.file_extension_reader import FileExtensionReader, create_file_reader_tool
-from codebase_rag.tools.file_extension_writer import FileExtensionWriter, create_file_writer_tool
-from codebase_rag.tools.file_extension_editor import FileExtensionEditor, create_file_editor_tool
-from codebase_rag.tools.shell_extension_command import ShellExtensionCommander, create_shell_command_tool
-from codebase_rag.tools.directory_extension_lister import DirectoryExtensionLister, create_directory_lister_tool
-from codebase_rag.tools.document_extension_analyzer import DocumentExtensionAnalyzer, create_document_analyzer_tool
+from codebase_rag.tools.remote_file_reader import RemoteFileReader, create_file_reader_tool
+from codebase_rag.tools.remote_file_writer import RemoteFileWriter, create_file_writer_tool
+from codebase_rag.tools.remote_file_editor import RemoteFileEditor, create_file_editor_tool
+from codebase_rag.tools.remote_shell_command import RemoteShellCommander, create_shell_command_tool
+from codebase_rag.tools.remote_directory_lister import RemoteDirectoryLister, create_directory_lister_tool
+from codebase_rag.tools.remote_document_analyzer import RemoteDocumentAnalyzer, create_document_analyzer_tool
 from codebase_rag.tools.semantic_search import create_semantic_search_tool, create_get_function_source_tool
 from codebase_rag.services.llm import CypherGenerator, create_rag_orchestrator
 from sockets.server import sio
@@ -49,12 +49,12 @@ def _initialize_services_and_agent(ingestor: MemgraphIngestor, socket_id: str) -
 
     cypher_generator = CypherGenerator()
     code_retriever = CodeRetriever(project_root='.', ingestor=ingestor)
-    file_reader = FileExtensionReader(socket_id=socket_id)
-    file_writer = FileExtensionWriter(socket_id=socket_id)
-    file_editor = FileExtensionEditor(socket_id=socket_id)
-    shell_commander = ShellExtensionCommander(socket_id=socket_id)
-    directory_lister = DirectoryExtensionLister(socket_id=socket_id)
-    document_analyzer = DocumentExtensionAnalyzer(socket_id=socket_id)
+    file_reader = RemoteFileReader(socket_id=socket_id)
+    file_writer = RemoteFileWriter(socket_id=socket_id)
+    file_editor = RemoteFileEditor(socket_id=socket_id)
+    shell_commander = RemoteShellCommander(socket_id=socket_id)
+    directory_lister = RemoteDirectoryLister(socket_id=socket_id)
+    document_analyzer = RemoteDocumentAnalyzer(socket_id=socket_id)
 
     query_tool = create_query_tool(ingestor, cypher_generator, console)
     code_tool = create_code_retrieval_tool(code_retriever)
@@ -92,7 +92,7 @@ async def query(question: str, socket_id: str, session_id: str = None):
         history = []
         rag_agent = _initialize_services_and_agent(ingestor, socket_id=socket_id)
         if session_id == None:
-            session_id = uuid.uuid4()
+            session_id = str(uuid.uuid4())
         else:
             history = get_session(session_id)
         response = await rag_agent.run(question, message_history=history)

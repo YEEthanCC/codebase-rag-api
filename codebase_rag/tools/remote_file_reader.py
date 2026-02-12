@@ -5,7 +5,7 @@ from sockets.server import sio
 from pathlib import Path
 
 
-class FileExtensionReader:
+class RemoteFileReader:
     """Service to read file content from the filesystem."""
 
     def __init__(self, socket_id: str):
@@ -50,7 +50,7 @@ class FileExtensionReader:
 
 
 
-def create_file_reader_tool(file_reader: FileExtensionReader) -> Tool:
+def create_file_reader_tool(file_reader: RemoteFileReader) -> Tool:
     """Factory function to create the file reader tool."""
 
     async def read_file_content(file_path: str) -> str:

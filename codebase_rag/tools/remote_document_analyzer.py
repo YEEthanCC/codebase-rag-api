@@ -22,14 +22,13 @@ class _NotSupportedClient:
         )
 
 
-class DocumentExtensionAnalyzer:
+class RemoteDocumentAnalyzer:
     """
     A tool to perform multimodal analysis on documents like PDFs
     by making a direct call to the Gemini API.
     """
 
     def __init__(self, socket_id: str) -> None:
-        self.project_root = '.'
         self.socket_id = socket_id
         # Initialize client based on the orchestrator model's provider
         # Note: Document analysis uses the orchestrator model since it's the main reasoning model
@@ -51,7 +50,6 @@ class DocumentExtensionAnalyzer:
             # Non-Gemini providers are not supported for document analysis yet.
             self.client = _NotSupportedClient()
 
-        logger.info(f"DocumentAnalyzer initialized with root: {self.project_root}")
 
     async def analyze(self, file_path: str, question: str) -> str:
         """
@@ -132,7 +130,7 @@ class DocumentExtensionAnalyzer:
             return f"An error occurred during analysis: {e}"
 
 
-def create_document_analyzer_tool(analyzer: DocumentExtensionAnalyzer) -> Tool:
+def create_document_analyzer_tool(analyzer: RemoteDocumentAnalyzer) -> Tool:
     """Factory function to create the document analyzer tool."""
 
     def analyze_document(file_path: str, question: str) -> str:

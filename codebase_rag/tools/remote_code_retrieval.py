@@ -8,7 +8,7 @@ from ..schemas import CodeSnippet
 from sockets.server import sio
 
 
-class CodeRetriever:
+class RemoteCodeRetriever:
     """Service to retrieve code snippets using the graph and filesystem."""
 
     def __init__(self, socket_id: str, ingestor: MemgraphIngestor):
@@ -86,7 +86,7 @@ class CodeRetriever:
             )
 
 
-def create_code_retrieval_tool(code_retriever: CodeRetriever) -> Tool:
+def create_code_retrieval_tool(code_retriever: RemoteCodeRetriever) -> Tool:
     """Factory function to create the code snippet retrieval tool."""
 
     async def get_code_snippet(ctx: RunContext, qualified_name: str) -> CodeSnippet:

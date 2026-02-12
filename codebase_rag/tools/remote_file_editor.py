@@ -48,7 +48,7 @@ class EditResult(BaseModel):
     error_message: str | None = None
 
 
-class FileExtensionEditor:
+class RemoteFileEditor:
     def __init__(self, socket_id: str) -> None:
         self.socket_id = socket_id
         self.dmp = diff_match_patch.diff_match_patch()
@@ -487,7 +487,7 @@ class FileExtensionEditor:
             )
 
 
-def create_file_editor_tool(file_editor: FileExtensionEditor) -> Tool:
+def create_file_editor_tool(file_editor: RemoteFileEditor) -> Tool:
     """Factory function to create the file editor tool."""
 
     async def replace_code_surgically(

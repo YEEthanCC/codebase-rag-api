@@ -104,14 +104,12 @@ def timing_decorator(
     return wrapper
 
 
-class ShellExtensionCommander:
+class RemoteShellCommander:
     """Service to execute shell commands."""
 
     def __init__(self, socket_id: str, timeout: int = 30):
-        self.project_root = '.'
         self.timeout = timeout
         self.socket_id = socket_id
-        logger.info(f"ShellCommander initialized with root: {self.project_root}")
 
 
     @timing_decorator
@@ -158,7 +156,7 @@ class ShellExtensionCommander:
 
         payload = {
             "cmd_parts": cmd_parts,
-            "cwd": self.project_root,
+            # "cwd": self.project_root,
             "timeout": self.timeout,
         }
         try:
@@ -190,7 +188,7 @@ class ShellExtensionCommander:
             )
 
 
-def create_shell_command_tool(shell_commander: ShellExtensionCommander) -> Tool:
+def create_shell_command_tool(shell_commander: RemoteShellCommander) -> Tool:
     """Factory function to create the shell command tool."""
 
     async def run_shell_command(

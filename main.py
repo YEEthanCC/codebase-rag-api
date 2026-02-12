@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from controllers.graph_controller import router as graph_router
 from controllers.repo_controller import router as repo_router
 from controllers.repo_extension_controller import router as repo_extension_router
+from controllers.remote_repo_controller import router as remote_repo_router
 from fastapi.middleware.cors import CORSMiddleware
 from sockets.server import sio
 import socketio
@@ -25,6 +26,7 @@ app.add_middleware(
 app.include_router(graph_router)
 app.include_router(repo_router)
 app.include_router(repo_extension_router)
+app.include_router(remote_repo_router)
 
 socket_app = socketio.ASGIApp(
 	sio,

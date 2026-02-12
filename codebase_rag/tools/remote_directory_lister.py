@@ -6,7 +6,7 @@ from pydantic_ai import Tool
 from sockets.server import sio
 
 
-class DirectoryExtensionLister:
+class RemoteDirectoryLister:
     def __init__(self, socket_id: str):
         self.socket_id = socket_id
 
@@ -14,7 +14,7 @@ class DirectoryExtensionLister:
         """
         Lists the contents of a specified directory.
         """
-
+        print(f"list_directory_contents: {directory_path}")
         try:
             res = await sio.call('dir:list', {'dir_path': directory_path}, to=self.socket_id)
             
@@ -30,7 +30,7 @@ class DirectoryExtensionLister:
 
 
 
-def create_directory_lister_tool(directory_lister: DirectoryExtensionLister) -> Tool:
+def create_directory_lister_tool(directory_lister: RemoteDirectoryLister) -> Tool:
     return Tool(
         function=directory_lister.list_directory_contents,
         description="Lists the contents of a directory to explore the codebase.",
