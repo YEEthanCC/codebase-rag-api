@@ -3,6 +3,8 @@ from codebase_rag.config import settings
 from rich.console import Console
 from rich.prompt import Confirm
 from typing import Any
+from codebase_rag.main import _handle_rejection
+from codebase_rag.graph_updater import MemgraphIngestor
 from db.session import get_session, set_session
 from codebase_rag.tools.codebase_query import create_query_tool
 from codebase_rag.services.llm import CypherGenerator, create_rag_orchestrator
@@ -16,10 +18,28 @@ from codebase_rag.tools.remote_document_analyzer import RemoteDocumentAnalyzer, 
 from codebase_rag.tools.semantic_search import create_semantic_search_tool, create_get_function_source_tool
 from codebase_rag.services.llm import CypherGenerator, create_rag_orchestrator
 from sockets.server import sio
+from prompt.agent import agent_instruction
+from pydantic_ai.messages import ModelResponse, ToolCallPart
 import uuid
 
 console = Console(width=None, force_terminal=True)
 confirm_edits_globally = True
+
+# Tool names that indicate file modifications were made
+_EDIT_TOOL_NAMES = frozenset([
+    "create_new_file",
+    "replace_code_surgically",
+])
+
+
+def has_edit_tool_calls(response) -> bool:
+    """Check if the agent response contains actual calls to file-editing tools."""
+    for message in response.new_messages():
+        if isinstance(message, ModelResponse):
+            for part in message.parts:
+                if isinstance(part, ToolCallPart) and part.tool_name in _EDIT_TOOL_NAMES:
+                    return True
+    return False
 
 def _initialize_services_and_agent(ingestor: MemgraphIngestor, socket_id: str) -> Any:
     """Initializes all services and creates the RAG agent."""
@@ -84,7 +104,7 @@ def _initialize_services_and_agent(ingestor: MemgraphIngestor, socket_id: str) -
     return rag_agent
 
 
-async def query(question: str, socket_id: str, session_id: str = None):
+async def query(question: str, mode: str, socket_id: str, session_id: str = None):
     with MemgraphIngestor(
         host=settings.MEMGRAPH_HOST,
         port=settings.MEMGRAPH_PORT,
@@ -95,7 +115,23 @@ async def query(question: str, socket_id: str, session_id: str = None):
             session_id = str(uuid.uuid4())
         else:
             history = get_session(session_id)
-        response = await rag_agent.run(question, message_history=history)
+        question_with_context = question
+        if mode == 'agent' and len(history) == 0:
+             question_with_context = agent_instruction.format(question=question)
+        response = await rag_agent.run(question_with_context, message_history=history)
         history.extend(response.new_messages())
         set_session(session_id, history)
-        return session_id, response.output
+        return session_id, response.output, has_edit_tool_calls(response)
+    
+async def discard_changes(socket_id: str, session_id: str):
+    with MemgraphIngestor(
+        host=settings.MEMGRAPH_HOST,
+        port=settings.MEMGRAPH_PORT,
+    ) as ingestor:
+        console.print("[bold green]Successfully connected to Memgraph.[/bold green]")
+
+        rag_agent = _initialize_services_and_agent(ingestor=ingestor, socket_id=socket_id)
+        history = get_session(session_id)
+        await _handle_rejection(rag_agent, history, console)
+        set_session(session_id, history)
+

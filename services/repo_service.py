@@ -1,4 +1,5 @@
-from codebase_rag.main import run_with_cancellation, _initialize_services_and_agent, _setup_common_initialization, init_session_log, log_session_event, get_session_context, is_edit_operation_response, _handle_rejection
+from codebase_rag.main import run_with_cancellation, _initialize_services_and_agent, _setup_common_initialization, init_session_log, log_session_event, get_session_context, _handle_rejection
+from services.remote_repo_service import has_edit_tool_calls
 from codebase_rag.graph_updater import MemgraphIngestor
 from codebase_rag.config import settings
 from rich.console import Console
@@ -96,6 +97,6 @@ Remember: Propose changes first, wait for my approval, then implement.
         )
     history.extend(response.new_messages())
     set_session(session_id, history)
-    return response.output, is_edit_operation_response(response.output)
+    return response.output, has_edit_tool_calls(response)
 
     

@@ -74,13 +74,17 @@ class RemoteFileEditor:
             return self.parsers.get(lang_name)
         return None
 
-    def get_ast(self, file_path: str) -> Node | None:
+    async def get_ast(self, file_path: str) -> Node | None:
         parser = self.get_parser(file_path)
         if not parser:
             logger.warning(f"No parser available for {file_path}")
             return None
         try: 
-            res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            res = await sio.call(
+                "file:read",
+                {"file_path": file_path},
+                to=self.socket_id,
+            )
         except Exception as e:
             return None
         if not res["ok"]:
@@ -89,10 +93,10 @@ class RemoteFileEditor:
         tree = parser.parse(content)
         return tree.root_node
 
-    def get_function_source_code(
+    async def get_function_source_code(
         self, file_path: str, function_name: str, line_number: int | None = None
     ) -> str | None:
-        root_node = self.get_ast(file_path)
+        root_node = await self.get_ast(file_path)
         if not root_node:
             return None
 
@@ -205,14 +209,14 @@ class RemoteFileEditor:
                 return None
             return str(node_text.decode("utf-8"))
 
-    def replace_function_source_code(
+    async def replace_function_source_code(
         self,
         file_path: str,
         function_name: str,
         new_code: str,
         line_number: int | None = None,
     ) -> bool:
-        original_code = self.get_function_source_code(
+        original_code = await self.get_function_source_code(
             file_path, function_name, line_number
         )
         if not original_code:
@@ -220,7 +224,11 @@ class RemoteFileEditor:
             return False
         
         try: 
-            res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            res = await sio.call(
+                "file:read",
+                {"file_path": file_path},
+                to=self.socket_id,
+            )
         except Exception as e:
             return False
         if not res["ok"]:
@@ -244,21 +252,28 @@ class RemoteFileEditor:
             logger.warning("No changes detected after replacement.")
             return False
 
-        sio.emit('write_file', {'file_path': file_path, 'content': new_content})
+        res = await sio.call(
+            "file:write",
+            {"file_path": file_path, "content": new_content},
+            to=self.socket_id,
+        )
+        if not res["ok"]:
+            logger.error(f"Error creating file {file_path}: {res['error']}")
+            return False
 
         logger.success(
             f"Successfully replaced function '{function_name}' in {file_path}."
         )
         return True
 
-    def get_diff(
+    async def get_diff(
         self,
         file_path: str,
         function_name: str,
         new_code: str,
         line_number: int | None = None,
     ) -> str | None:
-        original_code = self.get_function_source_code(
+        original_code = await self.get_function_source_code(
             file_path, function_name, line_number
         )
         if not original_code:
@@ -277,13 +292,17 @@ class RemoteFileEditor:
         )
         return "".join(diff)
 
-    def apply_patch_to_file(self, file_path: str, patch_text: str) -> bool:
+    async def apply_patch_to_file(self, file_path: str, patch_text: str) -> bool:
         """Apply a patch to a file using diff-match-patch."""
         try:
             try: 
-                res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+                res = await sio.call(
+                    "file:read",
+                    {"file_path": file_path},
+                    to=self.socket_id,
+                )
             except Exception as e:
-                return None
+                return False
             if not res["ok"]:
                 return False
             original_content = res["content"]
@@ -299,7 +318,7 @@ class RemoteFileEditor:
                 return False
 
             # Write the updated content
-            res = sio.call(
+            res = await sio.call(
                 "file:write", 
                 {"file_path": file_path, "content": new_content},
                 to=self.socket_id,
@@ -370,7 +389,7 @@ class RemoteFileEditor:
 
         print()  # Extra newline for spacing
 
-    def replace_code_block(
+    async def replace_code_block(
         self, file_path: str, target_block: str, replacement_block: str
     ) -> bool:
         """Surgically replace a specific code block in a file using diff-match-patch."""
@@ -378,7 +397,11 @@ class RemoteFileEditor:
             f"[FileEditor] Attempting surgical block replacement in: {file_path}"
         )
         try:
-            res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            res = await sio.call(
+                "file:read",
+                {"file_path": file_path},
+                to=self.socket_id,
+            )
             if not res["ok"]:
                 return False
             original_content = res["content"]
@@ -418,7 +441,7 @@ class RemoteFileEditor:
                 return False
 
             # Write the surgically modified content
-            res = sio.call(
+            res = await sio.call(
                 "file:write", 
                 {"file_path": file_path, "content": patched_content},
                 to=self.socket_id,
@@ -448,16 +471,22 @@ class RemoteFileEditor:
         logger.info(f"[FileEditor] Attempting full file replacement: {file_path}")
         try:
             # Read original content to show diff
-            res = sio.call('file:read', {'file_path': file_path}, to=self.socket_id)
+            res = await sio.call(
+                "file:read",
+                {"file_path": file_path},
+                to=self.socket_id,
+            )
             if not res["ok"]:
-                return False
+                return EditResult(
+                    file_path=file_path, success=False, error_message=res["error"]
+                )
             original_content = res["content"]
             # Display colored diff
             if original_content != new_content:
                 self._display_colored_diff(original_content, new_content, file_path)
 
             # Write new content (full replacement)
-            res = sio.call(
+            res = await sio.call(
                 "file:write", 
                 {"file_path": file_path, "content": new_content},
                 to=self.socket_id,
@@ -506,7 +535,7 @@ def create_file_editor_tool(file_editor: RemoteFileEditor) -> Tool:
         Use this when you need to change specific functions, classes, or code blocks
         without affecting the rest of the file. The target_code must be an exact match.
         """
-        success = file_editor.replace_code_block(
+        success = await file_editor.replace_code_block(
             file_path, target_code, replacement_code
         )
         if success:

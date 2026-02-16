@@ -161,7 +161,7 @@ class RemoteShellCommander:
         }
         try:
             result: dict[str, Any] = await asyncio.wait_for(
-                self.sio.call("command:run", payload, to=self.socket_id),
+                sio.call("command:run", payload, to=self.socket_id),
                 timeout=self.timeout + 5,  # small buffer
             )
 
