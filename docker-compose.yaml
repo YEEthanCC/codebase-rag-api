@@ -1,5 +1,17 @@
-version: "3"
 services:
+  app:
+    image: e3ancc/codebase-rag-api:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      MEMGRAPH_HOST: memgraph
+      REDIS_HOST: redis
+    depends_on:
+      - memgraph
+      - redis
+    restart: unless-stopped
   memgraph:
     image: memgraph/memgraph-mage
     ports:
